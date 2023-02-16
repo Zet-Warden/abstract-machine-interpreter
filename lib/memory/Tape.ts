@@ -4,21 +4,24 @@ import TapeCell from './TapeCell';
 class Tape {
     private currentCell: TapeCell;
 
-    constructor(input: string) {
-        const symbols = input.trim().split('');
-
-        //assign a TapeCell to each symbol
-        let prevTapeCell: TapeCell;
-        symbols.forEach((symbol) => {
-            const initTapeCell = new TapeCell(symbol);
-            if (this.currentCell == undefined) {
-                this.currentCell = initTapeCell;
-            } else {
-                // prevTapeCell.joinRight(initTapeCell);
-                initTapeCell.joinLeft(prevTapeCell);
-            }
-            prevTapeCell = initTapeCell;
-        });
+    constructor(input: string | TapeCell) {
+        if (typeof input != 'string' && input instanceof TapeCell) {
+            this.currentCell = input;
+        } else {
+            const symbols = input.trim().split('');
+            //assign a TapeCell to each symbol
+            let prevTapeCell: TapeCell;
+            symbols.forEach((symbol) => {
+                const newTapeCell = new TapeCell(symbol);
+                if (this.currentCell == undefined) {
+                    this.currentCell = newTapeCell;
+                } else {
+                    // prevTapeCell.joinRight(initTapeCell);
+                    newTapeCell.joinLeft(prevTapeCell);
+                }
+                prevTapeCell = newTapeCell;
+            });
+        }
     }
 
     get currentSymbol(): string {
@@ -117,6 +120,11 @@ class Tape {
         return startingCell;
     }
 
+    write(symbol: string) {
+        this.currentCell.write(symbol);
+        return this.currentSymbol;
+    }
+
     toString(): string {
         const startingCell = this.getStartingCell();
         let string = '';
@@ -136,6 +144,65 @@ class Tape {
 
         //remove trailing \n
         return string.trim();
+    }
+
+    clone() {
+        //checks if the cell has been cloned
+        const visitedCells = new Set<TapeCell>();
+
+        //checks if the a cell from the original tape already has a copy
+        //if so we reference that copy instead of cloning the TapeCell again
+        const mappedCells = new Map<TapeCell, TapeCell>();
+
+        const initCell = _clone(this.currentCell);
+        return new Tape(initCell!);
+
+        function _clone(cell: TapeCell) {
+            if (cell == undefined) return;
+            if (visitedCells.has(cell)) return;
+
+            let newCell: TapeCell;
+
+            if (mappedCells.has(cell)) {
+                newCell = mappedCells.get(cell)!;
+            } else {
+                newCell = new TapeCell(cell.symbol);
+                mappedCells.set(cell, newCell);
+            }
+
+            const directions = [
+                Directions.LEFT,
+                Directions.RIGHT,
+                Directions.UP,
+                Directions.DOWN,
+            ];
+
+            directions.forEach((direction) => {
+                if (cell[direction] != undefined) {
+                    if (mappedCells.has(cell[direction])) {
+                        newCell.join(
+                            mappedCells.get(cell[direction])!,
+                            direction
+                        );
+                    } else {
+                        const connectedCell = new TapeCell(
+                            cell[direction].symbol
+                        );
+                        newCell.join(connectedCell, direction);
+                        mappedCells.set(cell[direction], connectedCell);
+                    }
+                }
+            });
+
+            visitedCells.add(cell);
+
+            _clone(cell.left);
+            _clone(cell.up);
+            _clone(cell.right);
+            _clone(cell.down);
+
+            return newCell!;
+        }
     }
 }
 
