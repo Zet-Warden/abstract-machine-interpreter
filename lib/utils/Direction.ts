@@ -1,7 +1,7 @@
 /**
  * DO NOT MODIFY!
  * This enum maps directly to the properties of TapeCell
- * Modifying this file means modifying the properties defined in TapeCell.ts
+ * Modifying this file means you should also modify the properties defined in TapeCell.ts
  */
 
 enum Directions {

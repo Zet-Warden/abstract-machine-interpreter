@@ -1,20 +1,20 @@
-export default class Stack<T> {
-    private _stack: T[];
+export default class Stack {
+    private _stack: string[];
 
-    constructor(arr?: T[]) {
-        if (typeof arr != 'undefined') this._stack = arr;
+    constructor(arr?: string[]) {
+        if (typeof arr != 'undefined') this._stack = [...arr];
         else this._stack = [];
     }
 
-    push(element: T): void {
+    push(element: string): void {
         this._stack.push(element);
     }
 
-    pop(): T | undefined {
+    pop(): string | undefined {
         return this._stack.pop();
     }
 
-    peek(): T | undefined {
+    peek(): string | undefined {
         return this._stack.at(-1);
     }
 
@@ -22,7 +22,7 @@ export default class Stack<T> {
         return this._stack.length == 0;
     }
 
-    copy(): Stack<T> {
+    copy(): Stack {
         return new Stack(this._stack);
     }
 

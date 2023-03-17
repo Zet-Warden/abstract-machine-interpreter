@@ -1,4 +1,5 @@
 import Directions from '../utils/Direction';
+import Tape from './Tape';
 
 export default class TapeCell {
     private _symbol: string;
@@ -65,4 +66,15 @@ export default class TapeCell {
     toString(): string {
         return this._symbol;
     }
+
+    // clone(): TapeCell {
+    //     const clonedCell = new TapeCell(this._symbol);
+
+    //     if (this.right != undefined) clonedCell.joinRight(this.right);
+    //     if (this.left != undefined) clonedCell.joinLeft(this.left);
+    //     if (this.up != undefined) clonedCell.joinUp(this.up);
+    //     if (this.down != undefined) clonedCell.joinDown(this.down);
+
+    //     return clonedCell;
+    // }
 }

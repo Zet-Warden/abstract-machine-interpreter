@@ -1,20 +1,20 @@
-export default class Queue<T> {
-    private _queue: T[];
+export default class Queue {
+    private _queue: string[];
 
-    constructor(arr?: T[]) {
-        if (typeof arr != 'undefined') this._queue = arr;
+    constructor(arr?: string[]) {
+        if (typeof arr != 'undefined') this._queue = [...arr];
         else this._queue = [];
     }
 
-    enqueue(element: T): void {
+    enqueue(element: string): void {
         this._queue.unshift(element);
     }
 
-    dequeue(): T | undefined {
+    dequeue(): string | undefined {
         return this._queue.shift();
     }
 
-    peek(): T | undefined {
+    peek(): string | undefined {
         return this._queue.at(0);
     }
 
@@ -22,7 +22,7 @@ export default class Queue<T> {
         return this._queue.length == 0;
     }
 
-    copy(): Queue<T> {
+    copy(): Queue {
         return new Queue(this._queue);
     }
 
