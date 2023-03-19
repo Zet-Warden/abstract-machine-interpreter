@@ -6,11 +6,11 @@ export default class Queue {
         else this._queue = [];
     }
 
-    enqueue(element: string): void {
+    push(element: string): void {
         this._queue.unshift(element);
     }
 
-    dequeue(): string | undefined {
+    pop(): string | undefined {
         return this._queue.shift();
     }
 
@@ -22,7 +22,7 @@ export default class Queue {
         return this._queue.length == 0;
     }
 
-    copy(): Queue {
+    clone(): Queue {
         return new Queue(this._queue);
     }
 

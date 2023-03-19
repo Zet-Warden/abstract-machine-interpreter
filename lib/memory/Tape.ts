@@ -1,4 +1,4 @@
-import Directions from '../utils/Direction';
+import Direction from '../utils/Direction';
 import TapeCell from './TapeCell';
 
 class Tape {
@@ -29,35 +29,35 @@ class Tape {
     }
 
     moveLeft(): string {
-        return this.move(Directions.LEFT);
+        return this.move(Direction.LEFT);
     }
 
     moveRight(): string {
-        return this.move(Directions.RIGHT);
+        return this.move(Direction.RIGHT);
     }
 
     moveUp(): string {
-        return this.move(Directions.UP);
+        return this.move(Direction.UP);
     }
 
     moveDown(): string {
-        return this.move(Directions.DOWN);
+        return this.move(Direction.DOWN);
     }
 
-    move(direction: Directions): string {
+    move(direction: Direction): string {
         // property of a TapeCell that determines the opposite Cell from the direction the tape is moving
         // e.g. if the tape is moving at Directions.LEFT
         //      then the previous cell must be located at TapeCell[oppositeDirection]
-        const getOppositeDirection = (direction: Directions) => {
+        const getOppositeDirection = (direction: Direction) => {
             switch (direction) {
-                case Directions.LEFT:
-                    return Directions.RIGHT;
-                case Directions.RIGHT:
-                    return Directions.LEFT;
-                case Directions.UP:
-                    return Directions.DOWN;
-                case Directions.DOWN:
-                    return Directions.UP;
+                case Direction.LEFT:
+                    return Direction.RIGHT;
+                case Direction.RIGHT:
+                    return Direction.LEFT;
+                case Direction.UP:
+                    return Direction.DOWN;
+                case Direction.DOWN:
+                    return Direction.UP;
             }
         };
 
@@ -79,9 +79,9 @@ class Tape {
         this.currentCell.join(prevCell, oppositeDirection);
 
         const directionsToCheck =
-            direction == Directions.LEFT || direction == Directions.RIGHT
-                ? [Directions.UP, Directions.DOWN]
-                : [Directions.LEFT, Directions.RIGHT];
+            direction == Direction.LEFT || direction == Direction.RIGHT
+                ? [Direction.UP, Direction.DOWN]
+                : [Direction.LEFT, Direction.RIGHT];
 
         directionsToCheck.forEach((checkDirection) => {
             let prevCell = this.currentCell[oppositeDirection];
@@ -125,7 +125,7 @@ class Tape {
         return this.currentSymbol;
     }
 
-    toString(): string {
+    toString(options: { printBlank: boolean } = { printBlank: true }): string {
         const startingCell = this.getStartingCell();
         let string = '';
 
@@ -143,7 +143,10 @@ class Tape {
         }
 
         //remove trailing \n
-        return string.trim();
+        if (options.printBlank) {
+            return string.trim();
+        }
+        return string.trim().replaceAll(TapeCell.BLANK_SYMBOL, '');
     }
 
     clone() {
@@ -171,10 +174,10 @@ class Tape {
             }
 
             const directions = [
-                Directions.LEFT,
-                Directions.RIGHT,
-                Directions.UP,
-                Directions.DOWN,
+                Direction.LEFT,
+                Direction.RIGHT,
+                Direction.UP,
+                Direction.DOWN,
             ];
 
             directions.forEach((direction) => {

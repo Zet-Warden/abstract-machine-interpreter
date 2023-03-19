@@ -1,4 +1,4 @@
-import Directions from '../utils/Direction';
+import Direction from '../utils/Direction';
 import Tape from './Tape';
 
 export default class TapeCell {
@@ -8,7 +8,7 @@ export default class TapeCell {
     up: TapeCell;
     down: TapeCell;
 
-    static BLANK_SYMBOL: string = 'Ø';
+    static BLANK_SYMBOL: string = '#';
 
     constructor(symbol: string = TapeCell.BLANK_SYMBOL) {
         this._symbol = symbol;
@@ -18,18 +18,18 @@ export default class TapeCell {
         return this._symbol;
     }
 
-    join(tapeBlock: TapeCell, direction: Directions) {
+    join(tapeBlock: TapeCell, direction: Direction) {
         switch (direction) {
-            case Directions.LEFT:
+            case Direction.LEFT:
                 this.joinLeft(tapeBlock);
                 break;
-            case Directions.RIGHT:
+            case Direction.RIGHT:
                 this.joinRight(tapeBlock);
                 break;
-            case Directions.UP:
+            case Direction.UP:
                 this.joinUp(tapeBlock);
                 break;
-            case Directions.DOWN:
+            case Direction.DOWN:
                 this.joinDown(tapeBlock);
                 break;
             default:

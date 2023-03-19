@@ -22,7 +22,7 @@ export default class Stack {
         return this._stack.length == 0;
     }
 
-    copy(): Stack {
+    clone(): Stack {
         return new Stack(this._stack);
     }
 

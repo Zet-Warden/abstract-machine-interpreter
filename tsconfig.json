@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ESNext",
         "useDefineForClassFields": true,
-        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "lib": ["DOM", "DOM.Iterable", "ESNext", "ES2021.String"],
         "allowJs": false,
         "skipLibCheck": true,
         "esModuleInterop": false,
@@ -17,6 +17,6 @@
         "jsx": "react-jsx",
         "strictPropertyInitialization": false
     },
-    "include": ["src"],
+    "include": ["src", "lib", "tests"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }

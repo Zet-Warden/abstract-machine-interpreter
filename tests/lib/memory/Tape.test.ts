@@ -3,7 +3,7 @@ import dedent from 'ts-dedent';
 import Tape from '../../../lib/memory/Tape';
 import TapeCell from '../../../lib/memory/TapeCell';
 
-//Ø
+//#
 
 describe('Memory Tape', () => {
     describe('Moving the tape', () => {
@@ -18,21 +18,21 @@ describe('Memory Tape', () => {
             const tape = new Tape('1100');
             tape.moveUp();
             expect(tape.toString()).toBe(dedent`
-            ØØØØ
+            ####
             1100`);
 
             tape.moveLeft();
             expect(tape.toString()).toBe(dedent`
-            ØØØØØ
-            Ø1100`);
+            #####
+            #1100`);
 
             tape.moveDown();
             tape.moveDown();
 
             expect(tape.toString()).toBe(dedent`
-            ØØØØØ
-            Ø1100
-            ØØØØØ`);
+            #####
+            #1100
+            #####`);
 
             tape.moveRight();
             tape.moveRight();
@@ -40,11 +40,10 @@ describe('Memory Tape', () => {
             tape.moveRight();
             tape.moveRight();
 
-            console.log(tape.toString());
             expect(tape.toString()).toBe(dedent`
-            ØØØØØØ
-            Ø1100Ø
-            ØØØØØØ`);
+            ######
+            #1100#
+            ######`);
         });
 
         test('Moving the tape inside tape area', () => {
@@ -67,9 +66,9 @@ describe('Memory Tape', () => {
             tape.moveDown();
 
             expect(tape.toString()).toBe(dedent`
-            ØØØØ
+            ####
             1100
-            ØØØØ`);
+            ####`);
         });
     });
 
@@ -106,19 +105,19 @@ describe('Memory Tape', () => {
         tape.moveUp();
 
         expect(tape.toString()).toBe(dedent`
-        ØØØØØ
-        ØØØØØ
-        ØØØØØ
+        #####
+        #####
+        #####
         10010`);
 
         expect(newTape.toString()).toBe(dedent`
         10010
-        ØØØØØ
-        ØØØØØ`);
+        #####
+        #####`);
 
         expect(newerTape.toString()).toBe(dedent`
         100A0
-        ØØØØØ`);
+        #####`);
 
         expect(newerTape.currentSymbol).toBe('A');
     });

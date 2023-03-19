@@ -4,11 +4,11 @@
  * Modifying this file means you should also modify the properties defined in TapeCell.ts
  */
 
-enum Directions {
+enum Direction {
     LEFT = 'left',
     RIGHT = 'right',
     UP = 'up',
     DOWN = 'down',
 }
 
-export default Directions;
+export default Direction;
