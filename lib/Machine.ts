@@ -140,13 +140,9 @@ export default class Machine {
         return [];
     }
 
-    private writeTransition(
+    private readTransition(
         timeline: Timeline,
-        command:
-            | Command.SCAN
-            | Command.SCAN_LEFT
-            | Command.SCAN_RIGHT
-            | Command.READ
+        command: Command.SCAN_LEFT | Command.SCAN_RIGHT | Command.READ
     ) {
         const inputTape = timeline.getInputTape();
         const outputTape = timeline.getOutputTape();
@@ -154,7 +150,7 @@ export default class Machine {
         const stateName = timeline.currentStateName;
         const state = this.states.get(stateName)!;
 
-        if (command == Command.SCAN || command == Command.SCAN_RIGHT) {
+        if (command == Command.SCAN_RIGHT) {
             var symbol = inputTape.moveRight();
         } else if (command == Command.SCAN_LEFT) {
             var symbol = inputTape.moveLeft();
@@ -169,84 +165,87 @@ export default class Machine {
             return [timeline];
         }
 
-        const newTimelines = this.createNewTimelines(nextStates, {
-            inputTape,
-            outputTape,
-            memories,
-        });
+        const newTimelines = [];
+        for (const nextStateName of nextStates) {
+            const newTimeline = this.createNewTimeline(nextStateName, {
+                inputTape,
+                outputTape,
+                memories,
+            });
+            newTimelines.push(newTimeline);
+        }
+        return newTimelines;
+    }
+
+    private writeTransitions(
+        timeline: Timeline,
+        command: Command.PRINT | Command.WRITE
+    ): Timeline[] {
+        const inputTape = timeline.getInputTape();
+        const outputTape = timeline.getOutputTape();
+        const memories = timeline.getMemories();
+        const stateName = timeline.currentStateName;
+        const state = this.states.get(stateName)!;
+
+        const writeTransitions = [...state.getTransitions().entries()];
+        const newTimelines = [];
+
+        for (const [symbolTobePrinted, nextStates] of writeTransitions) {
+            if (command == Command.PRINT) {
+                outputTape.write(symbolTobePrinted);
+                outputTape.moveRight();
+            } else {
+                const memory = memories.get(state.memoryName!)!;
+                (<Stack | Queue>memory).push(symbolTobePrinted);
+            }
+
+            for (const nextStateName of nextStates) {
+                const newTimeline = this.createNewTimeline(nextStateName, {
+                    inputTape,
+                    outputTape,
+                    memories,
+                });
+                newTimelines.push(newTimeline);
+            }
+        }
 
         return newTimelines;
     }
 
-    private createNewTimelines(
-        nextStates: string[],
+    private createNewTimeline(
+        nextStateName: string,
         timeline: {
             inputTape: Tape;
             outputTape: Tape;
             memories: Map<string, Stack | Queue | Tape>;
         }
-    ) {
-        const newTimelines: Timeline[] = [];
-        for (const nextStateName of nextStates) {
-            const nextState = this.states.get(nextStateName)!;
-            const newTimeline = new Timeline(
-                nextState.name,
-                timeline.inputTape,
-                timeline.outputTape,
-                timeline.memories
-            );
+    ): Timeline {
+        const nextState = this.states.get(nextStateName)!;
+        const newTimeline = new Timeline(
+            nextState.name,
+            timeline.inputTape,
+            timeline.outputTape,
+            timeline.memories
+        );
 
-            if (nextState.name == 'accept') {
-                newTimeline.setStatus(TimelineStatus.ACCEPTED);
-            } else if (nextState.name == 'reject') {
-                newTimeline.setStatus(TimelineStatus.DEAD);
-            }
-            newTimelines.push(newTimeline);
+        if (nextState.name == 'accept') {
+            newTimeline.setStatus(TimelineStatus.ACCEPTED);
+        } else if (nextState.name == 'reject') {
+            newTimeline.setStatus(TimelineStatus.DEAD);
         }
 
-        return newTimelines;
+        return newTimeline;
     }
 
     private scan(
         timeline: Timeline,
         direction: Direction.RIGHT | Direction.LEFT
     ): Timeline[] {
-        const newTimelines: Timeline[] = [];
-
-        const inputTape = timeline.getInputTape();
-        const outputTape = timeline.getOutputTape();
-        const memories = timeline.getMemories();
-        const stateName = timeline.currentStateName;
-
-        const symbol =
+        const command =
             direction == Direction.RIGHT
-                ? inputTape.moveRight()
-                : inputTape.moveLeft();
-        const state = this.states.get(stateName)!;
-
-        if (state.getNextState(symbol).length == 0) {
-            timeline.setStatus(TimelineStatus.DEAD);
-            return [timeline];
-        }
-
-        for (const nextStateName of state.getNextState(symbol)) {
-            const nextState = this.states.get(nextStateName)!;
-            const newTimeline = new Timeline(
-                nextState.name,
-                inputTape,
-                outputTape,
-                memories
-            );
-
-            if (nextState.name == 'accept') {
-                newTimeline.setStatus(TimelineStatus.ACCEPTED);
-            } else if (nextState.name == 'reject') {
-                newTimeline.setStatus(TimelineStatus.DEAD);
-            }
-            newTimelines.push(newTimeline);
-        }
-
-        return newTimelines;
+                ? Command.SCAN_RIGHT
+                : Command.SCAN_LEFT;
+        return this.readTransition(timeline, command);
     }
 
     private print(timeline: Timeline): Timeline[] {
