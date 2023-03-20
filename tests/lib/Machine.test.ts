@@ -1,5 +1,6 @@
 import Machine from '../../lib/Machine';
 import Stack from '../../lib/memory/Stack';
+import Tape from '../../lib/memory/Tape';
 import TapeCell from '../../lib/memory/TapeCell';
 import State from '../../lib/State';
 import Command from '../../lib/utils/Command';
@@ -105,6 +106,79 @@ describe('', () => {
                 .toString()
                 .replaceAll(TapeCell.BLANK_SYMBOL, '')
         ).toEqual('1100');
+    });
+
+    it('should handle 1D turing machine', () => {
+        //turing machine that accepts a^n b^m c^m d^n
+        const machine = new Machine();
+
+        const A = new State('A', Command.RIGHT, 't1');
+        const B = new State('B', Command.RIGHT, 't1');
+        const C = new State('C', Command.RIGHT, 't1');
+        const D = new State('D', Command.LEFT, 't1');
+        const E = new State('E', Command.LEFT, 't1');
+        const F = new State('F', Command.RIGHT, 't1');
+        const G = new State('G', Command.RIGHT, 't1');
+        const H = new State('H', Command.LEFT, 't1');
+        const I = new State('I', Command.LEFT, 't1');
+        const J = new State('J', Command.RIGHT, 't1');
+        const accept = new State('accept');
+
+        A.addTransition('a/#', 'B');
+
+        B.addTransition('a/a', 'B');
+        B.addTransition('b/b', 'B');
+        B.addTransition('c/c', 'B');
+        B.addTransition('d/d', 'C');
+
+        C.addTransition('d/d', 'C');
+        C.addTransition('#/#', 'D');
+
+        D.addTransition('d/#', 'E');
+
+        E.addTransition('a/a', 'E');
+        E.addTransition('b/b', 'E');
+        E.addTransition('c/c', 'E');
+        E.addTransition('d/d', 'E');
+        E.addTransition('#/#', 'F');
+
+        F.addTransition('a/#', 'B');
+        F.addTransition('b/#', 'G');
+
+        G.addTransition('b/b', 'G');
+        G.addTransition('c/c', 'G');
+        G.addTransition('#/#', 'H');
+
+        H.addTransition('c/#', 'I');
+
+        I.addTransition('b/b', 'I');
+        I.addTransition('c/c', 'I');
+        I.addTransition('#/#', 'J');
+
+        J.addTransition('b/#', 'G');
+        J.addTransition('#/#', 'accept');
+
+        const tape = new Tape('#aabbbbccccddd');
+        machine.addMemory('t1', tape);
+
+        machine.addState(A);
+        machine.addState(B);
+        machine.addState(C);
+        machine.addState(D);
+        machine.addState(E);
+        machine.addState(F);
+        machine.addState(G);
+        machine.addState(H);
+        machine.addState(I);
+        machine.addState(J);
+        machine.addState(accept);
+
+        machine.start();
+        const result = machine.run();
+
+        // expect(result).toEqual('accepted');
+        console.log(machine.timelines[0].getMemories().get('t1')!.toString());
+        expect(result).toEqual('accepted');
     });
 
     it('should handle nondeterminism', () => {

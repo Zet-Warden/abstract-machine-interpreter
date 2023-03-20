@@ -62,7 +62,7 @@ export default class Machine {
         this.memories.set(name, memory);
     }
 
-    start(input: string) {
+    start(input: string = '') {
         this.timelines = [];
         const clonedMemory = new Map<string, Queue | Stack | Tape>();
         const entries = this.memories.entries();
@@ -70,7 +70,19 @@ export default class Machine {
             clonedMemory.set(memoryName, memory.clone());
         }
 
-        const inputTape = new Tape(`${TapeCell.BLANK_SYMBOL}${input}`);
+        const [hasDeclaredTape, memoryTape] = (() => {
+            const memories = this.memories.values();
+            for (const memory of memories) {
+                if (memory instanceof Tape) {
+                    return [true, memory];
+                }
+            }
+            return [false, ''];
+        })();
+
+        const inputTape = hasDeclaredTape
+            ? (memoryTape as Tape)
+            : new Tape(`${TapeCell.BLANK_SYMBOL}${input}`);
         const outputTape = new Tape(`${TapeCell.BLANK_SYMBOL}`);
         const initialTimeline = new Timeline(
             this.initialState.name,
@@ -80,6 +92,7 @@ export default class Machine {
         );
 
         this.timelines.push(initialTimeline);
+        // hasDeclaredTape ? console.log('start', this.timelines.length) : '';
     }
 
     step() {
@@ -110,34 +123,64 @@ export default class Machine {
         const state = this.states.get(stateName)!;
         switch (state.command) {
             case Command.SCAN:
-                return this.scan(timeline, Direction.RIGHT);
+                return this.scan_right(timeline);
             case Command.PRINT:
                 return this.print(timeline);
             case Command.SCAN_LEFT:
-                return this.scan(timeline, Direction.LEFT);
+                return this.scan_left(timeline);
             case Command.SCAN_RIGHT:
-                return this.scan(timeline, Direction.RIGHT);
+                return this.scan_right(timeline);
             case Command.READ:
                 return this.read(timeline);
             case Command.WRITE:
                 return this.write(timeline);
-            // case Command.RIGHT:
-            //     right();
-            //     break;
-            // case Command.LEFT:
-            //     left();
-            //     break;
-            // case Command.UP:
-            //     up();
-            //     break;
-            // case Command.DOWN:
-            //     down();
-            //     break;
-            // default:
-            //     return this.scan(timeline, Direction.RIGHT);
+            case Command.RIGHT:
+                return this.right(timeline);
+            case Command.LEFT:
+                return this.left(timeline);
+            case Command.UP:
+                return this.up(timeline);
+            case Command.DOWN:
+                return this.down(timeline);
         }
 
         return [];
+    }
+
+    private scan_right(timeline: Timeline): Timeline[] {
+        return this.readTransition(timeline, Command.SCAN_RIGHT);
+    }
+
+    private scan_left(timeline: Timeline): Timeline[] {
+        return this.readTransition(timeline, Command.SCAN_LEFT);
+    }
+
+    private print(timeline: Timeline): Timeline[] {
+        return this.writeTransition(timeline, Command.PRINT);
+    }
+
+    private read(timeline: Timeline): Timeline[] {
+        return this.readTransition(timeline, Command.READ);
+    }
+
+    private write(timeline: Timeline): Timeline[] {
+        return this.writeTransition(timeline, Command.WRITE);
+    }
+
+    private right(timeline: Timeline): Timeline[] {
+        return this.readWriteTransition(timeline, Direction.RIGHT);
+    }
+
+    private left(timeline: Timeline): Timeline[] {
+        return this.readWriteTransition(timeline, Direction.LEFT);
+    }
+
+    private up(timeline: Timeline): Timeline[] {
+        return this.readWriteTransition(timeline, Direction.UP);
+    }
+
+    private down(timeline: Timeline): Timeline[] {
+        return this.readWriteTransition(timeline, Direction.DOWN);
     }
 
     private readTransition(
@@ -160,10 +203,6 @@ export default class Machine {
         }
 
         const nextStates = state.getNextState(symbol);
-        if (nextStates.length == 0) {
-            timeline.setStatus(TimelineStatus.DEAD);
-            return [timeline];
-        }
 
         const newTimelines = [];
         for (const nextStateName of nextStates) {
@@ -174,10 +213,16 @@ export default class Machine {
             });
             newTimelines.push(newTimeline);
         }
+
+        if (newTimelines.length == 0) {
+            timeline.setStatus(TimelineStatus.DEAD);
+            newTimelines.push(timeline);
+        }
+
         return newTimelines;
     }
 
-    private writeTransitions(
+    private writeTransition(
         timeline: Timeline,
         command: Command.PRINT | Command.WRITE
     ): Timeline[] {
@@ -212,6 +257,51 @@ export default class Machine {
         return newTimelines;
     }
 
+    private readWriteTransition(
+        timeline: Timeline,
+        direction: Direction
+    ): Timeline[] {
+        const inputTape = timeline.getInputTape();
+        const outputTape = timeline.getOutputTape();
+        const memories = timeline.getMemories();
+        const stateName = timeline.currentStateName;
+        const state = this.states.get(stateName)!;
+
+        const tape = memories.get(state.memoryName!)! as Tape;
+        const symbol = tape.move(direction);
+
+        const transitions = state.getTransitions();
+        const readWriteTransitions = [...transitions.entries()];
+        const newTimelines = [];
+
+        for (const [readWriteTrigger, nextStates] of readWriteTransitions) {
+            const [symbolTrigger, symbolToBePrinted] =
+                readWriteTrigger.split('/');
+
+            if (symbolTrigger != symbol) continue;
+
+            tape.write(symbolToBePrinted);
+            for (const nextStateName of nextStates) {
+                const newTimeline = this.createNewTimeline(nextStateName, {
+                    inputTape,
+                    outputTape,
+                    memories,
+                });
+                newTimelines.push(newTimeline);
+            }
+        }
+
+        if (newTimelines.length == 0) {
+            timeline.setStatus(TimelineStatus.DEAD);
+            newTimelines.push(timeline);
+
+            console.log(
+                `Died at timeline where current state is at: ${stateName}; read a ${symbol}`
+            );
+        }
+        return newTimelines;
+    }
+
     private createNewTimeline(
         nextStateName: string,
         timeline: {
@@ -235,129 +325,5 @@ export default class Machine {
         }
 
         return newTimeline;
-    }
-
-    private scan(
-        timeline: Timeline,
-        direction: Direction.RIGHT | Direction.LEFT
-    ): Timeline[] {
-        const command =
-            direction == Direction.RIGHT
-                ? Command.SCAN_RIGHT
-                : Command.SCAN_LEFT;
-        return this.readTransition(timeline, command);
-    }
-
-    private print(timeline: Timeline): Timeline[] {
-        const newTimelines: Timeline[] = [];
-
-        const inputTape = timeline.getInputTape();
-        const outputTape = timeline.getOutputTape();
-        const memories = timeline.getMemories();
-        const stateName = timeline.currentStateName;
-
-        const state = this.states.get(stateName)!;
-        const printTransitions = [...state.getTransitions().entries()];
-
-        for (const [symbolTobePrinted, nextStates] of printTransitions) {
-            outputTape.write(symbolTobePrinted);
-            outputTape.moveRight();
-
-            for (const nextStateName of nextStates) {
-                const nextState = this.states.get(nextStateName)!;
-                const newTimeline = new Timeline(
-                    nextState.name,
-                    inputTape,
-                    outputTape,
-                    memories
-                );
-
-                if (nextState.name == 'accept') {
-                    newTimeline.setStatus(TimelineStatus.ACCEPTED);
-                } else if (nextState.name == 'reject') {
-                    newTimeline.setStatus(TimelineStatus.DEAD);
-                }
-                newTimelines.push(newTimeline);
-            }
-        }
-
-        return newTimelines;
-    }
-
-    private read(timeline: Timeline): Timeline[] {
-        const newTimelines: Timeline[] = [];
-
-        const inputTape = timeline.getInputTape();
-        const outputTape = timeline.getOutputTape();
-        const memories = timeline.getMemories();
-        const stateName = timeline.currentStateName;
-
-        const state = this.states.get(stateName)!;
-        const memoryName = state.memoryName!;
-
-        const memory = memories.get(memoryName)! as Queue | Stack;
-        const symbol = memory.pop()!;
-
-        if (state.getNextState(symbol).length == 0) {
-            timeline.setStatus(TimelineStatus.DEAD);
-            return [timeline];
-        }
-
-        for (const nextStateName of state.getNextState(symbol)) {
-            const nextState = this.states.get(nextStateName)!;
-            const newTimeline = new Timeline(
-                nextState.name,
-                inputTape,
-                outputTape,
-                memories
-            );
-
-            if (nextState.name == 'accept') {
-                newTimeline.setStatus(TimelineStatus.ACCEPTED);
-            } else if (nextState.name == 'reject') {
-                newTimeline.setStatus(TimelineStatus.DEAD);
-            }
-            newTimelines.push(newTimeline);
-        }
-
-        return newTimelines;
-    }
-
-    private write(timeline: Timeline): Timeline[] {
-        const newTimelines: Timeline[] = [];
-
-        const inputTape = timeline.getInputTape();
-        const outputTape = timeline.getOutputTape();
-        const memories = timeline.getMemories();
-        const stateName = timeline.currentStateName;
-
-        const state = this.states.get(stateName)!;
-        const memoryName = state.memoryName!;
-        const memory = memories.get(memoryName)! as Queue | Stack;
-
-        const printTransitions = [...state.getTransitions().entries()];
-
-        for (const [symbolTobePrinted, nextStates] of printTransitions) {
-            memory.push(symbolTobePrinted);
-
-            for (const nextStateName of nextStates) {
-                const nextState = this.states.get(nextStateName)!;
-                const newTimeline = new Timeline(
-                    nextState.name,
-                    inputTape,
-                    outputTape,
-                    memories
-                );
-
-                if (nextState.name == 'accept') {
-                    newTimeline.setStatus(TimelineStatus.ACCEPTED);
-                } else if (nextState.name == 'reject') {
-                    newTimeline.setStatus(TimelineStatus.DEAD);
-                }
-                newTimelines.push(newTimeline);
-            }
-        }
-
-        return newTimelines;
     }
 }
