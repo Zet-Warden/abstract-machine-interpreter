@@ -7,6 +7,8 @@
         "build": "tsc && vite build",
         "preview": "vite preview",
         "test": "jest test",
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d build",
         "generate-grammar": "lezer-generator ./lib/grammar/lang.grammar -o ./lib/grammar/lang.js"
     },
     "dependencies": {
@@ -27,6 +29,7 @@
         "@types/react-dom": "^18.0.10",
         "@vitejs/plugin-react": "^3.1.0",
         "autoprefixer": "^10.4.14",
+        "gh-pages": "^5.0.0",
         "jest": "^29.4.2",
         "postcss": "^8.4.21",
         "prettier": "^2.8.7",
