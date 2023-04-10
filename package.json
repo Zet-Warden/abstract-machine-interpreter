@@ -8,7 +8,7 @@
         "preview": "vite preview",
         "test": "jest test",
         "predeploy": "npm run build",
-        "deploy": "gh-pages -d build",
+        "deploy": "gh-pages -d dist",
         "generate-grammar": "lezer-generator ./lib/grammar/lang.grammar -o ./lib/grammar/lang.js"
     },
     "dependencies": {
