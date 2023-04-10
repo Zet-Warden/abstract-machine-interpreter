@@ -2,7 +2,7 @@
     "name": "abstract-machine-interpreter",
     "private": true,
     "version": "0.0.0",
-    "homepage": "https://zet-warden.github.io/abstract-machine-interpreter",
+    "homepage": "https://zet-warden.github.io/abstract-machine-interpreter/",
     "scripts": {
         "dev": "vite --host",
         "build": "tsc && vite build",
