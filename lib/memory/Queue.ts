@@ -7,7 +7,8 @@ export default class Queue {
     }
 
     push(element: string): void {
-        this._queue.unshift(element);
+        // this._queue.unshift(element);
+        this._queue.push(element);
     }
 
     pop(): string | undefined {
@@ -24,6 +25,10 @@ export default class Queue {
 
     clone(): Queue {
         return new Queue(this._queue);
+    }
+
+    toArray() {
+        return [...this._queue];
     }
 
     get length(): number {

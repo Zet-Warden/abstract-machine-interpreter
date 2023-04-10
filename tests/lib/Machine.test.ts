@@ -158,7 +158,7 @@ describe('', () => {
         J.addTransition('b/#', 'G');
         J.addTransition('#/#', 'accept');
 
-        const tape = new Tape('#aabbbbccccddd');
+        const tape = new Tape('#aaabbbbccccddd');
         machine.addMemory('t1', tape);
 
         machine.addState(A);
@@ -177,7 +177,7 @@ describe('', () => {
         const result = machine.run();
 
         // expect(result).toEqual('accepted');
-        console.log(machine.timelines[0].getMemories().get('t1')!.toString());
+        // console.log(machine.timelines[0].getMemories().get('t1')!.toString());
         expect(result).toEqual('accepted');
     });
 
@@ -456,6 +456,184 @@ describe('', () => {
                     const result = machine.run();
                     expect(result).toEqual('rejected');
                 });
+            });
+        });
+
+        describe('Problem set #3', () => {
+            describe('#1', () => {
+                const machine = new Machine();
+
+                const A = new State('A', Command.RIGHT, 't1');
+                const B = new State('B', Command.RIGHT, 't1');
+                const C = new State('C', Command.LEFT, 't1');
+                const D = new State('D', Command.RIGHT, 't1');
+                const E = new State('E', Command.RIGHT, 't1');
+                const F = new State('F', Command.RIGHT, 't1');
+                const G = new State('G', Command.LEFT, 't1');
+                const H = new State('H', Command.LEFT, 't1');
+                const J = new State('J', Command.LEFT, 't1');
+                const K = new State('K', Command.RIGHT, 't1');
+                const L = new State('L', Command.RIGHT, 't1');
+                const M = new State('M', Command.LEFT, 't1');
+                const N = new State('N', Command.LEFT, 't1');
+                const O = new State('O', Command.LEFT, 't1');
+                const accept = new State('accept');
+
+                A.addTransition('X/X', 'A');
+                A.addTransition('1/X', 'B');
+                A.addTransition('#/1', 'J');
+
+                B.addTransition('1/1', 'B');
+                B.addTransition('#/#', 'C');
+
+                C.addTransition('1/1', 'C');
+                C.addTransition('X/X', 'C');
+                C.addTransition('Y/Y', 'C');
+                C.addTransition('Z/Z', 'C');
+                C.addTransition('#/#', 'D');
+
+                D.addTransition('Y/Y', 'D');
+                D.addTransition('Z/Z', 'D');
+                D.addTransition('X/Y', 'E');
+                D.addTransition('1/Z', 'E');
+                D.addTransition('#/#', 'H');
+
+                E.addTransition('1/1', 'E');
+                E.addTransition('X/X', 'E');
+                E.addTransition('Y/Y', 'E');
+                E.addTransition('Z/Z', 'E');
+                E.addTransition('#/#', 'F');
+
+                F.addTransition('1/1', 'F');
+                F.addTransition('#/1', 'G');
+
+                G.addTransition('1/1', 'G');
+                G.addTransition('#/#', 'C');
+
+                H.addTransition('Y/X', 'H');
+                H.addTransition('Z/1', 'H');
+                H.addTransition('#/#', 'A');
+
+                J.addTransition('X/X', 'J');
+                J.addTransition('1/1', 'J');
+                J.addTransition('#/#', 'K');
+
+                K.addTransition('1/1', 'K');
+                K.addTransition('X/1', 'L');
+                K.addTransition('#/#', 'N');
+
+                L.addTransition('X/X', 'L');
+                L.addTransition('1/1', 'L');
+                L.addTransition('#/#', 'M');
+
+                M.addTransition('1/#', 'J');
+
+                N.addTransition('1/#', 'O');
+
+                O.addTransition('1/1', 'O');
+                O.addTransition('#/#', 'accept');
+
+                machine.addState(A);
+                machine.addState(B);
+                machine.addState(C);
+                machine.addState(D);
+                machine.addState(E);
+                machine.addState(F);
+                machine.addState(G);
+                machine.addState(H);
+                machine.addState(J);
+                machine.addState(K);
+                machine.addState(L);
+                machine.addState(M);
+                machine.addState(N);
+                machine.addState(O);
+                machine.addState(accept);
+
+                const tape = new Tape('#11');
+                machine.addMemory('t1', tape);
+
+                machine.start();
+                machine.run();
+
+                // console.log(
+                //     machine.timelines[0].getMemories().get('t1')!.toString()
+                // );
+                expect(
+                    machine.timelines[0]
+                        .getMemories()
+                        .get('t1')!
+                        .toString({ printBlank: false })
+                ).toEqual('1111');
+            });
+
+            describe('#2', () => {
+                const machine = new Machine();
+
+                const A = new State('A', Command.RIGHT, 't1');
+                const B = new State('B', Command.RIGHT, 't1');
+                const C = new State('C', Command.LEFT, 't1');
+                const D = new State('D', Command.RIGHT, 't1');
+                const E = new State('E', Command.LEFT, 't1');
+                const F = new State('F', Command.RIGHT, 't1');
+                const accept = new State('accept');
+
+                const G = new State('G', Command.RIGHT, 't1');
+                const H = new State('H', Command.RIGHT, 't1');
+
+                A.addTransition('X/X', 'A');
+                A.addTransition('a/X', 'B');
+                A.addTransition('Y/Y', 'G');
+                A.addTransition('#/#', 'accept');
+
+                B.addTransition('a/a', 'B');
+                B.addTransition('Y/Y', 'B');
+                B.addTransition('b/Y', 'C');
+
+                C.addTransition('a/a', 'C');
+                C.addTransition('X/X', 'C');
+                C.addTransition('Y/Y', 'C');
+                C.addTransition('#', 'A');
+
+                D.addTransition('Y/Y', 'D');
+                D.addTransition('Z/Z', 'D');
+                D.addTransition('c/Z', 'E');
+
+                E.addTransition('b/b', 'E');
+                E.addTransition('Z/Z', 'E');
+                E.addTransition('Y/Y', 'E');
+                E.addTransition('X/X', 'F');
+
+                F.addTransition('b/b', 'F');
+                F.addTransition('Y/b', 'D');
+                F.addTransition('Z/Z', 'H');
+
+                G.addTransition('Y/Y', 'G');
+                G.addTransition('c/c', 'E');
+
+                H.addTransition('Z/Z', 'H');
+                H.addTransition('#/#', 'accept');
+
+                const tape = new Tape('#aaabbbccc');
+                machine.addMemory('t1', tape);
+
+                machine.addState(A);
+                machine.addState(B);
+                machine.addState(C);
+                machine.addState(D);
+                machine.addState(E);
+                machine.addState(F);
+                machine.addState(accept);
+
+                machine.addState(G);
+                machine.addState(H);
+
+                machine.start('#aaabbbccc');
+                const result = machine.run();
+
+                // console.log(result);
+                // console.log(
+                //     machine.timelines[0].getMemories().get('t1')!.toString()
+                // );
             });
         });
     });

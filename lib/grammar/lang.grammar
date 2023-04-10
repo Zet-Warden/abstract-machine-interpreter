@@ -1,0 +1,48 @@
+@top Program { expression* }
+
+expression {
+    State |
+    Command |
+    Transition |
+
+    // DataHeader |
+    // LogicHeader |
+
+    Memory |
+    MemoryName |
+
+    DataSection { DataHeader DataDeclaration* END} |
+    LogicSection { LogicHeader LogicDeclaration* END}
+}
+
+DataDeclaration { Memory MemoryName}
+LogicDeclaration { State Command Transition*}
+END { ".END" }
+
+@tokens {
+    @precedence {DataHeader, Memory, Command, State, Transition, MemoryName}
+    @precedence {LogicHeader, Memory, Command, State, Transition, MemoryName}
+    @precedence { State, MemoryName }
+    @precedence { Command, MemoryName}
+    @precedence { Memory, MemoryName }
+
+    DataHeader { ".DATA" }
+    LogicHeader { ".LOGIC" }
+    // DataDeclaration { Memory MemoryName}
+    // LogicDeclaration { State Command Transition*}
+
+    Memory {"STACK" | "QUEUE" | "TAPE" | "2D_TAPE"}
+    Command { "SCAN" | "SCAN RIGHT" | "SCAN LEFT" | "READ" | "WRITE" | "RIGHT" | "LEFT" | "UP" | "DOWN"}
+
+    State { $[a-zA-Z]+ "]"}
+    Transition { "("  $[a-zA-Z0-9] "," $[a-zA-Z0-9]+  ")"}
+    MemoryName {$[a-zA-Z0-9]+}
+
+    space { @whitespace+ }
+    Comment { "//" ![\n]* }
+    "(" ")"
+}
+
+
+@skip {space | Comment}
+@detectDelim

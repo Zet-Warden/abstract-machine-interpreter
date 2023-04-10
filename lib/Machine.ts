@@ -13,6 +13,7 @@ export default class Machine {
     initialState: State;
     states: Map<string, State>;
     memories: Map<string, Queue | Stack | Tape>;
+    isInitialized: boolean;
 
     //non-deterministic machines can have multiple "timelines"
     timelines: Timeline[];
@@ -20,6 +21,16 @@ export default class Machine {
     constructor() {
         this.states = new Map<string, State>();
         this.memories = new Map<string, Queue | Stack | Tape>();
+        this.isInitialized = false;
+
+        this.timelines = [];
+    }
+
+    get status(): TimelineStatus {
+        if (this.isThereRunningTimeLine()) return TimelineStatus.RUNNING;
+        if (this.getAcceptedTimeline() != undefined)
+            return TimelineStatus.ACCEPTED;
+        return TimelineStatus.REJECTED;
     }
 
     getStateNames() {
@@ -32,6 +43,10 @@ export default class Machine {
         );
     }
 
+    getIsInitialized() {
+        return this.initialState != undefined;
+    }
+
     isThereRunningTimeLine() {
         return (
             this.timelines.some(
@@ -40,6 +55,13 @@ export default class Machine {
             this.timelines.every(
                 (timeline) => timeline.status != TimelineStatus.ACCEPTED
             )
+        );
+    }
+
+    shouldHalt() {
+        return (
+            this.getAcceptedTimeline() != undefined ||
+            !this.isThereRunningTimeLine()
         );
     }
 
@@ -62,8 +84,9 @@ export default class Machine {
         this.memories.set(name, memory);
     }
 
-    start(input: string = '') {
+    start(input: string = ''): Machine {
         this.timelines = [];
+
         const clonedMemory = new Map<string, Queue | Stack | Tape>();
         const entries = this.memories.entries();
         for (const [memoryName, memory] of entries) {
@@ -92,14 +115,22 @@ export default class Machine {
         );
 
         this.timelines.push(initialTimeline);
+        return this;
         // hasDeclaredTape ? console.log('start', this.timelines.length) : '';
     }
 
     step() {
+        if (this.shouldHalt()) return;
+
         const existingTimelines: Timeline[] = [];
         const additionalTimelines: Timeline[] = [];
 
-        for (const timeline of this.timelines) {
+        //remove previous dead/rejected timelines
+        const filteredTimelines = this.timelines.filter(
+            (timeline) => timeline.status != TimelineStatus.REJECTED
+        );
+
+        for (const timeline of filteredTimelines) {
             const newTimelines = this.stepTimeline(timeline);
             existingTimelines.push(...newTimelines.slice(0, 1));
             additionalTimelines.push(...newTimelines.slice(1));
@@ -109,7 +140,7 @@ export default class Machine {
     }
 
     run() {
-        while (this.isThereRunningTimeLine()) {
+        while (this.shouldHalt()) {
             this.step();
         }
 
@@ -121,6 +152,7 @@ export default class Machine {
     private stepTimeline(timeline: Timeline): Timeline[] {
         const stateName = timeline.currentStateName;
         const state = this.states.get(stateName)!;
+        console.log(state, stateName);
         switch (state.command) {
             case Command.SCAN:
                 return this.scan_right(timeline);
@@ -215,7 +247,7 @@ export default class Machine {
         }
 
         if (newTimelines.length == 0) {
-            timeline.setStatus(TimelineStatus.DEAD);
+            timeline.setStatus(TimelineStatus.REJECTED);
             newTimelines.push(timeline);
         }
 
@@ -281,6 +313,7 @@ export default class Machine {
             if (symbolTrigger != symbol) continue;
 
             tape.write(symbolToBePrinted);
+            // console.log(tape.toString({ printBlank: false }));
             for (const nextStateName of nextStates) {
                 const newTimeline = this.createNewTimeline(nextStateName, {
                     inputTape,
@@ -291,12 +324,17 @@ export default class Machine {
             }
         }
 
+        // if (stateName == 'A') console.log('A', symbol);
+
+        // console.log(tape.toString());
         if (newTimelines.length == 0) {
-            timeline.setStatus(TimelineStatus.DEAD);
+            timeline.setStatus(TimelineStatus.REJECTED);
             newTimelines.push(timeline);
 
             console.log(
-                `Died at timeline where current state is at: ${stateName}; read a ${symbol}`
+                `Died at timeline where current state is at: ${stateName}; read a ${symbol}; looking for ${[
+                    ...transitions.keys(),
+                ]}`
             );
         }
         return newTimelines;
@@ -310,18 +348,18 @@ export default class Machine {
             memories: Map<string, Stack | Queue | Tape>;
         }
     ): Timeline {
-        const nextState = this.states.get(nextStateName)!;
+        // const nextState = this.states.get(nextStateName)!;
         const newTimeline = new Timeline(
-            nextState.name,
+            nextStateName,
             timeline.inputTape,
             timeline.outputTape,
             timeline.memories
         );
 
-        if (nextState.name == 'accept') {
+        if (nextStateName == 'accept') {
             newTimeline.setStatus(TimelineStatus.ACCEPTED);
-        } else if (nextState.name == 'reject') {
-            newTimeline.setStatus(TimelineStatus.DEAD);
+        } else if (nextStateName == 'reject') {
+            newTimeline.setStatus(TimelineStatus.REJECTED);
         }
 
         return newTimeline;

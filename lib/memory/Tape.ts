@@ -2,19 +2,19 @@ import Direction from '../utils/Direction';
 import TapeCell from './TapeCell';
 
 class Tape {
-    private currentCell: TapeCell;
+    private _currentCell: TapeCell;
 
     constructor(input: string | TapeCell) {
         if (typeof input != 'string' && input instanceof TapeCell) {
-            this.currentCell = input;
+            this._currentCell = input;
         } else {
             const symbols = input.trim().split('');
             //assign a TapeCell to each symbol
             let prevTapeCell: TapeCell;
             symbols.forEach((symbol) => {
                 const newTapeCell = new TapeCell(symbol);
-                if (this.currentCell == undefined) {
-                    this.currentCell = newTapeCell;
+                if (this._currentCell == undefined) {
+                    this._currentCell = newTapeCell;
                 } else {
                     // prevTapeCell.joinRight(initTapeCell);
                     newTapeCell.joinLeft(prevTapeCell);
@@ -24,8 +24,31 @@ class Tape {
         }
     }
 
+    get currentCell() {
+        return this._currentCell;
+    }
+
     get currentSymbol(): string {
-        return this.currentCell.symbol;
+        return this._currentCell.symbol;
+    }
+
+    getCellRows() {
+        const startingCell = this.getStartingCell();
+        let currentCell = startingCell;
+        const rows = [];
+
+        while (currentCell != undefined) {
+            const leftMostCell = currentCell;
+            const row = [];
+            while (currentCell != undefined) {
+                row.push(currentCell);
+                currentCell = currentCell.right;
+            }
+            rows.push(row);
+            currentCell = leftMostCell.down;
+        }
+
+        return rows;
     }
 
     moveLeft(): string {
@@ -62,10 +85,10 @@ class Tape {
         };
 
         const oppositeDirection = getOppositeDirection(direction);
-        let prevCell = this.currentCell;
-        this.currentCell = prevCell[direction];
+        let prevCell = this._currentCell;
+        this._currentCell = prevCell[direction];
 
-        if (this.currentCell != undefined) return this.currentCell.symbol;
+        if (this._currentCell != undefined) return this._currentCell.symbol;
 
         /**
          * when currentCell is undefined it means that there are holes in the tape
@@ -73,10 +96,10 @@ class Tape {
          * ensure the tape is always a solid quadrilateral of tape cells
          */
 
-        this.currentCell = new TapeCell();
+        this._currentCell = new TapeCell();
         //after moving, the prev cell is located at the opposite direction that the tape just moved from
         //e.g. moving to the left means that the prevCell is located at the right of the now currentCell
-        this.currentCell.join(prevCell, oppositeDirection);
+        this._currentCell.join(prevCell, oppositeDirection);
 
         const directionsToCheck =
             direction == Direction.LEFT || direction == Direction.RIGHT
@@ -84,7 +107,7 @@ class Tape {
                 : [Direction.LEFT, Direction.RIGHT];
 
         directionsToCheck.forEach((checkDirection) => {
-            let prevCell = this.currentCell[oppositeDirection];
+            let prevCell = this._currentCell[oppositeDirection];
 
             //continue to fill block while not at edge of the tape
             while (prevCell[checkDirection] != undefined) {
@@ -99,7 +122,7 @@ class Tape {
             }
         });
 
-        return this.currentCell.symbol;
+        return this._currentCell.symbol;
     }
 
     private moveToLeftMostCell(currentCell: TapeCell): TapeCell {
@@ -114,14 +137,14 @@ class Tape {
 
     private getStartingCell() {
         // console.log(this.#currentCell);
-        const leftMostCell = this.moveToLeftMostCell(this.currentCell);
+        const leftMostCell = this.moveToLeftMostCell(this._currentCell);
         const startingCell = this.moveToTopMostCell(leftMostCell);
 
         return startingCell;
     }
 
     write(symbol: string) {
-        this.currentCell.write(symbol);
+        this._currentCell.write(symbol);
         return this.currentSymbol;
     }
 
@@ -157,7 +180,7 @@ class Tape {
         //if so we reference that copy instead of cloning the TapeCell again
         const mappedCells = new Map<TapeCell, TapeCell>();
 
-        const initCell = _clone(this.currentCell);
+        const initCell = _clone(this._currentCell);
         return new Tape(initCell!);
 
         function _clone(cell: TapeCell) {

@@ -26,6 +26,10 @@ export default class Stack {
         return new Stack(this._stack);
     }
 
+    toArray() {
+        return [...this._stack];
+    }
+
     get length(): number {
         return this._stack.length;
     }
