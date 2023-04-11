@@ -138,7 +138,7 @@ function App() {
                     </div>
                     <div className="h-full">
                         <TextEditor
-                            numOfLines={27}
+                            numOfLines={28}
                             onValueChange={(value) => {
                                 setCode(value);
                             }}
