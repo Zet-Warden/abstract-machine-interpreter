@@ -120,7 +120,7 @@ function App() {
 
     return (
         <div className="container flex h-full max-h-screen flex-col justify-center px-5 py-3">
-            <div className="flex h-[703px] gap-3">
+            <div className="flex h-[703px] max-h-[703px] gap-3">
                 <div className="relative flex w-1/2 flex-col">
                     <div className="flex justify-between py-3">
                         <div className="relative flex w-full items-center gap-2">
@@ -196,7 +196,7 @@ function App() {
                             />
                         </div>
                     </div>
-                    <div className="relative flex-1">
+                    <div className="relative h-1 flex-1">
                         <div className="h-full w-full overflow-y-auto border p-3">
                             <MemoryView
                                 memories={memories}
