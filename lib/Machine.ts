@@ -268,9 +268,11 @@ export default class Machine {
         const newTimelines = [];
 
         for (const [symbolTobePrinted, nextStates] of writeTransitions) {
+            const _outputTape = outputTape.clone();
+
             if (command == Command.PRINT) {
-                outputTape.write(symbolTobePrinted);
-                outputTape.moveRight();
+                _outputTape.write(symbolTobePrinted);
+                _outputTape.moveRight();
             } else {
                 const memory = memories.get(state.memoryName!)!;
                 (<Stack | Queue>memory).push(symbolTobePrinted);
@@ -279,7 +281,7 @@ export default class Machine {
             for (const nextStateName of nextStates) {
                 const newTimeline = this.createNewTimeline(nextStateName, {
                     inputTape,
-                    outputTape,
+                    outputTape: _outputTape,
                     memories,
                 });
                 newTimelines.push(newTimeline);
